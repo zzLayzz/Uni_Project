@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Chat Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 280px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">PDF Chat Assistant</h1>
+        
+        <!-- PDF Upload Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Upload PDF</h2>
+            <div class="flex items-center space-x-4">
+                <input type="file" 
+                       id="pdfFile" 
+                       accept=".pdf"
+                       class="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-blue-50 file:text-blue-700
+                              hover:file:bg-blue-100">
+                <button onclick="uploadPDF()" 
+                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                    Upload
+                </button>
+            </div>
+            <div id="uploadStatus" class="mt-2 text-sm"></div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Chat</h2>
+            <div id="chatMessages" class="chat-container overflow-y-auto mb-4 p-4 bg-gray-50 rounded-lg">
+                <div class="text-gray-500 text-center">Upload a PDF to start chatting!</div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <input type="text" 
+                       id="questionInput" 
+                       placeholder="Type your question here..."
+                       class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       onkeypress="handleEnter(event)">
+                <button onclick="askQuestion()" 
+                        class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">
+                    Ask
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isFileUploaded = false;
+
+        async function uploadPDF() {
+            const fileInput = document.getElementById('pdfFile');
+            const statusDiv = document.getElementById('uploadStatus');
+            
+            if (!fileInput.files.length) {
+                statusDiv.innerHTML = '<span class="text-red-500">Please select a file first!</span>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            statusDiv.innerHTML = '<span class="text-blue-500">Uploading and processing PDF...</span>';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = '<span class="text-green-500">✓ ' + data.message + '</span>';
+                    isFileUploaded = true;
+                    document.getElementById('chatMessages').innerHTML = '<div class="text-gray-500 text-center">PDF processed! Ask any questions about the document.</div>';
+                } else {
+                    statusDiv.innerHTML = '<span class="text-red-500">Error: ' + data.error + '</span>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<span class="text-red-500">Error uploading file: ' + error.message + '</span>';
+            }
+        }
+
+        async function askQuestion() {
+            if (!isFileUploaded) {
+                alert('Please upload a PDF first!');
+                return;
+            }
+
+            const questionInput = document.getElementById('questionInput');
+            const question = questionInput.value.trim();
+            
+            if (!question) return;
+
+            // Add user question to chat
+            addMessageToChat('user', question);
+            questionInput.value = '';
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addMessageToChat('assistant', data.answer);
+                } else {
+                    addMessageToChat('error', 'Error: ' + data.error);
+                }
+            } catch (error) {
+                addMessageToChat('error', 'Error: ' + error.message);
+            }
+        }
+
+        function addMessageToChat(role, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-4 ' + (role === 'user' ? 'text-right' : 'text-left');
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = role === 'user' 
+                ? 'inline-block bg-blue-500 text-white px-4 py-2 rounded-lg max-w-3xl text-left'
+                : 'inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded-lg max-w-3xl';
+            
+            if (role === 'error') {
+                messageBubble.className = 'inline-block bg-red-100 text-red-600 px-4 py-2 rounded-lg max-w-3xl';
+            }
+            
+            messageBubble.textContent = content;
+            messageDiv.appendChild(messageBubble);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                askQuestion();
+            }
+        }
+    </script>
+</body>
+</html> 

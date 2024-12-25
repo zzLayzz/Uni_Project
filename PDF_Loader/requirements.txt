@@ -1,0 +1,9 @@
+langchain
+openai
+flask
+python-dotenv
+chromadb
+pypdf
+jinja2 
+tiktoken
+langchain-community
