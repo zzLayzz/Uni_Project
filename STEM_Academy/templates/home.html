@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/Home.css') }}">
+  <title>STEM Academy</title>
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="home">
+    <h1>STEM ACADEMY</h1>
+    <p>Ignite Curiosity, Empower Minds</p>
+    <p>An AI-powered learning hub for SPM students to excel in Science subjects.</p>
+    <div class="button-container">
+      <button class="learn-more-btn" onclick="location.href='/aboutus';">Learn More</button>
+    </div>
+  </div>
+</body>
+</html>

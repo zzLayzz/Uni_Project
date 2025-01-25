@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEM Academy Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 200px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    {% include 'navbar.html' %}
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">STEM Academy Chat</h1>
+
+        <!-- Chat Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Chat</h2>
+            <div id="chatMessages" class="chat-container overflow-y-auto mb-4 p-4 bg-gray-50 rounded-lg">
+                <div class="text-gray-500 text-center">Ask any questions about the documents!</div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <input type="text" 
+                       id="questionInput" 
+                       placeholder="Type your question here or paste an image..."
+                       class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       onkeypress="handleEnter(event)"
+                       onpaste="handlePaste(event)">
+                <button onclick="askQuestion()" 
+                        class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">
+                    Ask
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle image pasting in the text box
+        async function handlePaste(event) {
+            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            for (const item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const base64Image = e.target.result;
+                        try {
+                            const response = await fetch('/upload_image', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ image: base64Image })
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                                addMessageToChat('assistant', 'Image uploaded successfully!');
+                            } else {
+                                addMessageToChat('error', 'Error: ' + data.error);
+                            }
+                        } catch (error) {
+                            addMessageToChat('error', 'Error: ' + error.message);
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }
+        }
+
+        async function askQuestion() {
+            const questionInput = document.getElementById('questionInput');
+            const question = questionInput.value.trim();
+            
+            if (!question) return;
+
+            // Add user question to chat
+            addMessageToChat('user', question);
+            questionInput.value = '';
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addMessageToChat('assistant', data.answer);
+                } else {
+                    addMessageToChat('error', 'Error: ' + data.error);
+                }
+            } catch (error) {
+                addMessageToChat('error', 'Error: ' + error.message);
+            }
+        }
+
+        function addMessageToChat(role, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-4 ' + (role === 'user' ? 'text-right' : 'text-left');
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = role === 'user' 
+                ? 'inline-block bg-blue-500 text-white px-4 py-2 rounded-lg max-w-3xl text-left'
+                : 'inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded-lg max-w-3xl';
+            
+            if (role === 'error') {
+                messageBubble.className = 'inline-block bg-red-100 text-red-600 px-4 py-2 rounded-lg max-w-3xl';
+            }
+            
+            messageBubble.textContent = content;
+            messageDiv.appendChild(messageBubble);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                askQuestion();
+            }
+        }
+    </script>
+</body>
+</html>

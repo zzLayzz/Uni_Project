@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/AboutUs.css') }}">
+  <title>About Us</title>
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="aboutus-container">
+    <!-- First Section -->
+    <div class="aboutus-section">
+      <div class="text-content">
+        <h3>Revolutionize</h3>
+        <h1>Empowering Learning Everywhere</h1>
+        <p>
+          Welcome to our company, where we strive to revolutionize education by empowering learners everywhere.
+          Our AI-powered research and study chatbot web application is designed to provide personalized
+          assistance and support to students of all levels. With our innovative technology, we aim to make
+          learning more accessible, engaging, and effective.
+        </p>
+      </div>
+    </div>
+
+    <!-- Second Section -->
+    <div class="aboutus-section reverse">
+      <div class="text-content">
+        <h3>Innovative</h3>
+        <h1>Revolutionizing the AI-powered chatbot industry</h1>
+        <p>
+          At our company, we are driven by a passion for leveraging AI technology to create intelligent chatbots
+          that enhance research and study experiences. With a focus on innovation, we are revolutionizing the
+          AI-powered chatbot industry by providing cutting-edge solutions that empower users to achieve their
+          goals more efficiently and effectively.
+        </p>
+        <button class="learn-more-btn" onclick="location.href='/chat';">Learn More</button>
+      </div>
+      <div class="image-content">
+        <img src="{{ url_for('static', filename='images/gambar2.png') }}" alt="Chatbot Image">
+      </div>
+    </div>
+  </div>
+</body>
+</html>

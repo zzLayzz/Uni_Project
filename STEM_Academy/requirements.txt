@@ -1,0 +1,9 @@
+openai == 0.28.0
+flask
+PyPDF2
+Flask 
+sentence-transformers 
+faiss-cpu 
+numpy
+flask-jwt-extended 
+werkzeug
